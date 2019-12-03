@@ -1,0 +1,70 @@
+import WazeRouteCalculator
+import datetime
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from_address = '67 Bonair Street, Somverille, MA'
+to_address = 'Instrumentation Laboratory, Hartwell Road, Bedford, MA'
+region = 'US'
+route = WazeRouteCalculator.WazeRouteCalculator(from_address, to_address, region, log_lvl=None)
+route_time, route_distance = route.calc_route_info()
+route_time = '%.3f'%(route_time)
+
+Current_Date = datetime.datetime.now()
+Current_Time = Current_Date.strftime("%H:%M")
+Current_Date = Current_Date.strftime("%m/%d/%Y")
+DataSet = [route_time,Current_Date,Current_Time]
+
+
+Excel_File_Path = 'C:\\Users\\slarose\\Desktop\\Log File Tool V1.0\\Commute.xlsx'
+df1 = pd.DataFrame(DataSet)
+df1 = df1.transpose()
+df2 = pd.read_excel('C:\\Users\\slarose\\Desktop\\Log File Tool V1.0\\Commute.xlsx')
+frames = [df1, df2]
+df3 = pd.concat(frames)
+writer = pd.ExcelWriter('C:\\Users\\slarose\\Desktop\\Log File Tool V1.0\\Commute.xlsx')
+df3.to_excel(writer,'Sheet 1')
+writer.save()
+ListofLists = df3.values.tolist()
+SortedLists =list(zip(*ListofLists))
+
+Times = SortedLists[2]
+y_pos = np.arange(len(Times))
+CommuteTime = SortedLists[0]
+
+excel_file = 'C:\\Users\\slarose\\Desktop\\Log File Tool V1.0\\Commute.xlsx'
+sheet_name = 'Sheet1'
+
+writer = pd.ExcelWriter(excel_file, engine='xlsxwriter')
+df3.to_excel(writer, sheet_name=sheet_name)
+
+workbook = writer.book
+worksheet = writer.sheets[sheet_name]
+
+chart = workbook.add_chart({'type': 'column'})
+
+# Configure the series of the chart from the dataframe data.
+# for col_num in range(1,len(CommuteTime)-1):
+#     chart.add_series({
+#         'name':       ['Sheet1', col_num + 2, 2],
+#         'categories': ['Sheet1', 1, 3, len(CommuteTime)+1, 3],
+#         'values':     ['Sheet1', 2, 1, col_num+2, 1],
+#         'gap':        300,
+#     })
+
+chart.add_series({
+    'name':       ['Sheet1', 2, 2, len(CommuteTime), 2],
+    'categories': ['Sheet1', 2, 3, len(CommuteTime), 3],
+    'values':     ['Sheet1', 2, 1, len(CommuteTime), 1],
+    'gap':        10,
+})
+
+# Configure the chart axes.
+chart.set_y_axis({'major_gridlines': {'visible': False}})
+
+# Insert the chart into the worksheet.
+worksheet.insert_chart('K2', chart)
+
+# Close the Pandas Excel writer and output the Excel file.
+writer.save()
